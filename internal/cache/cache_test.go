@@ -94,9 +94,10 @@ func TestGet(t *testing.T) {
 	}
 
 	for i := range 5 {
-		gotValue, _, err := cache.Get(context.Background(), fmt.Sprintf("%d", i))
+		gotValue, gotTime, err := cache.Get(context.Background(), fmt.Sprintf("%d", i))
 		assert.NoError(t, err)
 		assert.Equal(t, i, gotValue)
+		assert.NotEqual(t, time.Time{}, gotTime)
 	}
 }
 
