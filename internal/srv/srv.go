@@ -1,15 +1,18 @@
 package srv
 
 import (
-	"github.com/go-chi/chi"
+	"context"
 	"lru-cache/internal/cache"
+	"net/http"
 	"time"
+
+	"github.com/go-chi/chi"
 )
 
 type Server struct {
-	storage  cache.ILRUCache
-	router chi.Router
-	cfg    Config
+	storage cache.ILRUCache
+	router  chi.Router
+	cfg     Config
 }
 
 type Config struct {
@@ -19,21 +22,26 @@ type Config struct {
 }
 
 func New(cfg Config) Server {
-	 storage := cache.New(cfg.Capacity)
-   router := chi.NewRouter()
+	storage := cache.New(cfg.Capacity)
+	router := chi.NewRouter()
 
-   return Server {storage: storage, router: router, cfg: cfg}
+	return Server{storage: storage, router: router, cfg: cfg}
 }
 
 func (s *Server) Run(ctx context.Context) error {
 
-  s.router.Route("/api/lru", func (r chi.Router) {
-    r.Post("/", s.put)
-    r.Get("/{key}", s.get)
-    r.Get("/", s.getAll)
-    r.Delete("/{key}",evict)
-    r.Delete("/",evictAll)
-  })
+	s.router.Route("/api/lru", func(r chi.Router) {
+		r.Post("/", s.putKey)
+		r.Get("/{key}", s.getKey)
+		r.Get("/", s.getAllKeys)
+		r.Delete("/{key}", s.evictKey)
+		r.Delete("/", s.evictAllKeys)
+	})
 
-	http.ListenAndServe(s.cfg.HostPort, s.router)
+	err := http.ListenAndServe(s.cfg.HostPort, s.router)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
