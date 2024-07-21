@@ -122,7 +122,6 @@ func (c *cache) Evict(ctx context.Context, key string) (value interface{}, err e
 }
 
 func (c *cache) EvictAll(ctx context.Context) error {
-	c.left, c.right = &node{}, &node{}
 	c.left.next, c.right.prev = c.right, c.left
 	clear(c.data)
 	return nil
