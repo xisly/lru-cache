@@ -50,7 +50,7 @@ func (s *Server) Run(ctx context.Context) error {
 	s.router.Use(s.loggingMiddleware, middleware.Recoverer)
 
 	s.router.Route("/api/lru", func(r chi.Router) {
-		r.Post("/", s.putKey)
+		r.Post("/", s.postKey)
 		r.Get("/{key}", s.getKey)
 		r.Get("/", s.getAllKeys)
 		r.Delete("/{key}", s.evictKey)
@@ -58,7 +58,7 @@ func (s *Server) Run(ctx context.Context) error {
 	})
 
 	server := http.Server{
-		Addr: s.cfg.HostPort,
+		Addr:    s.cfg.HostPort,
 		Handler: s.router,
 	}
 
@@ -69,18 +69,18 @@ func (s *Server) Run(ctx context.Context) error {
 		}
 		s.logger.Info("Stopped serving new connections.")
 	}()
-	
+
 	s.logger.Info("Running server")
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
-	
+
 	shutdownCtx, shutdownRelease := context.WithTimeout(ctx, 10*time.Second)
 	defer shutdownRelease()
-	
+
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		s.logger.Error("HTTP shutdown error", slog.Any("error",err))
+		s.logger.Error("HTTP shutdown error", slog.Any("error", err))
 		os.Exit(2)
 	}
 	s.logger.Info("Graceful shutdown complete.")
