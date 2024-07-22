@@ -18,6 +18,7 @@ func main() {
 	flag.IntVar(&cfg.CacheSize, "cache-size", cfg.CacheSize, "Cache size")
 	flag.DurationVar(&cfg.DefaultTTL, "default-cache-ttl", cfg.DefaultTTL, "Default cache TTL")
 	flag.StringVar(&cfg.LogLevel, "log-level", cfg.LogLevel, "Log level")
+	flag.Parse()
 
 	srv, err := srv.New(cfg)
 	if err != nil {

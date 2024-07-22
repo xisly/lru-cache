@@ -1,3 +1,5 @@
+// Package srv provides a configured cache server with graceful shudown logic a function to run it,
+// along with all the http handlers, middlewares and test used in a project.
 package srv
 
 import (
@@ -5,7 +7,7 @@ import (
 	"errors"
 	"log/slog"
 	"lru-cache/internal/cache"
-	"lru-cache/pkg/loghandler"
+	"lru-cache/pkg/levelhandler"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,6 +18,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+// Server defines a configured server with storage, router, configuration, and logger.
 type Server struct {
 	storage cache.ILRUCache
 	router  chi.Router
@@ -23,15 +26,19 @@ type Server struct {
 	logger  *slog.Logger
 }
 
+// Config holds the configuration parameters for the server.
 type Config struct {
 	HostPort   string        `env:"SERVER_HOST_PORT" envDefault:"localhost:8080"`
 	CacheSize  int           `env:"CACHE_SIZE" envDefault:"10"`
 	DefaultTTL time.Duration `env:"DEFAULT_CACHE_TTL" envDefault:"1m"`
-	LogLevel   string        `env:"LOG_LEVEL" envDefault:"DEBUG"`
+	LogLevel   string        `env:"LOG_LEVEL" envDefault:"WARN"`
 }
 
+// New creates a new Server with the provided configuration.
+// It initializes the logger, storage, and router.
+// Returns a configured Server instance or an error if initialization fails.
 func New(cfg Config) (*Server, error) {
-	levelhandler, err := loghandler.New(cfg.LogLevel, slog.NewTextHandler(os.Stdout, nil))
+	levelhandler, err := levelhandler.New(cfg.LogLevel, slog.NewTextHandler(os.Stdout, nil))
 	if err != nil {
 		return nil, err
 	}
@@ -39,12 +46,18 @@ func New(cfg Config) (*Server, error) {
 	logger := slog.New(levelhandler)
 
 	storage := cache.New(cfg.CacheSize)
+	logger.Info("Created LRU cache", slog.Int("size", cfg.CacheSize))
 
 	router := chi.NewRouter()
+
+	logger.Debug("Configured", slog.Any("config", cfg))
 
 	return &Server{storage: storage, router: router, cfg: cfg, logger: logger}, nil
 }
 
+// Run starts the server and listens for incoming HTTP requests.
+// It sets up the routes and middleware, and handles graceful shutdown on receiving a termination signal.
+// Returns an error if the server encounters issues during operation.
 func (s *Server) Run(ctx context.Context) error {
 
 	s.router.Use(s.loggingMiddleware, middleware.Recoverer)

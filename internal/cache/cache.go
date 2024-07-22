@@ -1,3 +1,5 @@
+// Package cache provides an implementation of an LRU cache with concurrency support.
+// The cache supports only string keys and simple data types as values.
 package cache
 
 import (
@@ -37,6 +39,8 @@ type cache struct {
   mu sync.Mutex
 }
 
+// New creates a new LRU cache with the specified capacity.
+// Returns an instance of the ILRUCache interface.
 func New(capacity int) ILRUCache {
 	ret := cache{
 		capacity: capacity,
@@ -48,6 +52,8 @@ func New(capacity int) ILRUCache {
 	return &ret
 }
 
+// Put stores data in the cache with a specified TTL.
+// If the key already exists, the existing entry is updated.
 func (c *cache) Put(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
   c.mu.Lock()
   defer c.mu.Unlock()
@@ -78,6 +84,8 @@ func (c *cache) remove(nd *node) {
 	prev.next, nxt.prev = nxt, prev
 }
 
+// Get retrieves data from the cache by key.
+// Returns the value, expiration time, and an error if the key is not found or has expired.
 func (c *cache) Get(ctx context.Context, key string) (value interface{}, expiresAt time.Time, err error) {
   c.mu.Lock()
   defer c.mu.Unlock()
@@ -95,6 +103,8 @@ func (c *cache) Get(ctx context.Context, key string) (value interface{}, expires
 	return nil, time.Time{}, errs.ErrNotFound
 }
 
+// GetAll retrieves all entries from the cache as two slices: a slice of keys and a slice of values.
+// Returns an error if the cache is empty.
 func (c *cache) GetAll(ctx context.Context) (keys []string, values []interface{}, err error) {
   c.mu.Lock()
   defer c.mu.Unlock()
@@ -113,6 +123,8 @@ func (c *cache) GetAll(ctx context.Context) (keys []string, values []interface{}
 	return keys, values, nil
 }
 
+// Evict manually removes data by key from the cache.
+// Returns the value and an error if the key is not found or has expired.
 func (c *cache) Evict(ctx context.Context, key string) (value interface{}, err error) {
   c.mu.Lock()
   defer c.mu.Unlock()
@@ -135,6 +147,7 @@ func (c *cache) Evict(ctx context.Context, key string) (value interface{}, err e
 	return nil, errs.ErrNotFound
 }
 
+// EvictAll manually invalidates the entire cache.
 func (c *cache) EvictAll(ctx context.Context) error {
   c.mu.Lock()
   defer c.mu.Unlock()
