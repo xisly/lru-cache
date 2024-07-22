@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"lru-cache/pkg/errs"
+	"sync"
 	"time"
 )
 
@@ -33,6 +34,7 @@ type cache struct {
 	data     map[string]*node
 	left     *node
 	right    *node
+  mu sync.Mutex
 }
 
 func New(capacity int) ILRUCache {
@@ -47,6 +49,9 @@ func New(capacity int) ILRUCache {
 }
 
 func (c *cache) Put(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
+  c.mu.Lock()
+  defer c.mu.Unlock()
+
 	if _, ok := c.data[key]; ok {
 		c.remove(c.data[key])
 	}
@@ -74,6 +79,9 @@ func (c *cache) remove(nd *node) {
 }
 
 func (c *cache) Get(ctx context.Context, key string) (value interface{}, expiresAt time.Time, err error) {
+  c.mu.Lock()
+  defer c.mu.Unlock()
+
 	if nd, ok := c.data[key]; ok {
 		if nd.expiresAt.Before(time.Now()) {
 			c.remove(nd)
@@ -88,6 +96,9 @@ func (c *cache) Get(ctx context.Context, key string) (value interface{}, expires
 }
 
 func (c *cache) GetAll(ctx context.Context) (keys []string, values []interface{}, err error) {
+  c.mu.Lock()
+  defer c.mu.Unlock()
+
 	if len(c.data) == 0 {
 		err = errs.ErrCacheIsEmpty
 		return
@@ -103,6 +114,9 @@ func (c *cache) GetAll(ctx context.Context) (keys []string, values []interface{}
 }
 
 func (c *cache) Evict(ctx context.Context, key string) (value interface{}, err error) {
+  c.mu.Lock()
+  defer c.mu.Unlock()
+
 	if len(c.data) == 0 {
 		err = errs.ErrCacheIsEmpty
 		return
@@ -122,7 +136,11 @@ func (c *cache) Evict(ctx context.Context, key string) (value interface{}, err e
 }
 
 func (c *cache) EvictAll(ctx context.Context) error {
+  c.mu.Lock()
+  defer c.mu.Unlock()
+
 	c.left.next, c.right.prev = c.right, c.left
 	clear(c.data)
+
 	return nil
 }
