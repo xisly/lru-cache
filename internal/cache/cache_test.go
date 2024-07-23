@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestLazyTTL verifies that items with TTL are correctly removed from the cache after the TTL expires.
 func TestLazyTTL(t *testing.T) {
 	cache := New(5)
 
@@ -28,6 +29,7 @@ func TestLazyTTL(t *testing.T) {
 
 }
 
+// TestPut verifies that items can be added to the cache and that an existing item can be updated.
 func TestPut(t *testing.T) {
 	cache := New(5)
 
@@ -47,6 +49,7 @@ func TestPut(t *testing.T) {
 	assert.NotEqual(t, prevExpirationTime, actualExpirationTime)
 }
 
+// TestEvict verifies that an item can be manually removed from the cache and that the item is no longer retrievable.
 func TestEvict(t *testing.T) {
 	cache := New(5)
 
@@ -65,6 +68,7 @@ func TestEvict(t *testing.T) {
 
 }
 
+// TestEvictAll verifies that all items can be removed from the cache and that the cache is empty afterwards.
 func TestEvictAll(t *testing.T) {
 
 	cache := New(5)
@@ -85,6 +89,7 @@ func TestEvictAll(t *testing.T) {
 	assert.Equal(t, wantValues, gotValues)
 }
 
+// TestGet verifies that an item can be retrieved from the cache and that the correct value and expiration time are returned.
 func TestGet(t *testing.T) {
 	cache := New(23248247)
 
@@ -101,6 +106,7 @@ func TestGet(t *testing.T) {
 	}
 }
 
+// TestGetAll verifies that all items can be retrieved from the cache and that the correct keys and values are returned.
 func TestGetAll(t *testing.T) {
 	wantKeys := []string{"0", "1", "2", "3", "4"}
 	wantValues := []interface{}{0, 1, 2, 3, 4}
@@ -115,6 +121,7 @@ func TestGetAll(t *testing.T) {
 
 }
 
+// TestLeastRecentlyAddedKeyIsEvicted verifies that the least recently added key is evicted when the cache exceeds its capacity.
 func TestLeastRecntlyAddedKeyIsEvicted(t *testing.T) {
 	cache := New(5)
 	for i := range 6 {
