@@ -18,5 +18,6 @@ test coverage profile:
  go test -v -coverpkg=./... -coverprofile=coverage.out -covermode=count ./... && go tool cover -func coverage.out | grep total | awk '{print $3}'
 ```
 
-There's no background ttl cleanup - to do this cheaply I would use a probabalistic algorithm([kinda like redis does it](https://www.pankajtanwar.in/blog/how-redis-expires-keys-a-deep-dive-into-how-ttl-works-internally-in-redis)), but the problem is that go's ranging over maps isn't truly random. I've found [a really outdated implementation of a random map in go](https://github.com/lukechampine/randmap), maybe I should write a newer one myself.
+There's no background ttl cleanup - to do this cheaply I would use a probabalistic algorithm([kinda like redis does it](https://www.pankajtanwar.in/blog/how-redis-expires-keys-a-deep-dive-into-how-ttl-works-internally-in-redis)), but the problem is that go's ranging over maps isn't truly random*. I've found [a really outdated implementation of a random map in go](https://github.com/lukechampine/randmap), maybe I should write a newer one myself.
   
+*random enough to make my test flaky tho
