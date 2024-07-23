@@ -1,6 +1,6 @@
 # LRU-cache 
 
-The following package implements an LRU cache with ttl as an http service
+The module implements an LRU cache with ttl as an http service
 
 to run:
 ```bash
